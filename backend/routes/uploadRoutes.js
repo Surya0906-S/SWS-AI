@@ -1,5 +1,6 @@
 const express = require("express");
 const multer = require("multer");
+const db = require("../config/db");
 
 const router = express.Router();
 
@@ -19,7 +20,35 @@ const upload = multer({ storage });
 
 router.post("/", upload.array("files"), (req, res) => {
 
-    console.log(req.files);
+    req.files.forEach((file) => {
+
+        const sql = `
+            INSERT INTO documents
+            (filename, filesize, filetype, filepath, status)
+            VALUES (?, ?, ?, ?, ?)
+        `;
+
+        db.query(
+            sql,
+            [
+                file.originalname,
+                file.size,
+                file.mimetype,
+                file.path,
+                "complete"
+            ],
+            (err, result) => {
+
+                if(err){
+                    console.log("Insert Error:", err);
+                } else {
+                    console.log("Inserted Successfully");
+                }
+
+            }
+        );
+
+    });
 
     res.json({
         message: "Files uploaded successfully"
