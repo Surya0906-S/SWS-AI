@@ -106,7 +106,15 @@ router.get("/notifications", (req, res) => {
     });
 
 });
-
+// notification delete route
+router.delete("/notifications", async (req, res) => {
+    try {
+        await db.query("DELETE FROM notifications");
+        res.json({ message: "All notifications cleared" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 // DELETE FILE
 router.delete("/:id", (req, res) => {

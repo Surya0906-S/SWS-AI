@@ -42,97 +42,29 @@ uploadBtn.addEventListener("click", async () => {
     const files = fileInput.files;
 
     if(files.length === 0){
+
         return alert("Select files");
-    }
-
-    if(files.length > 3){
-
-        showToast(
-            `Upload in progress — processing ${files.length} files in background`
-        );
 
     }
 
+    showToast(
+        `Processing ${files.length} file(s)...`
+    );
+
+    // FIFO Upload Queue
     for(let file of files){
 
-        const fileItem =
-            document.createElement("div");
-
-        fileItem.classList.add("file-item");
-
-        fileItem.innerHTML = `
-            <h3>${file.name}</h3>
-
-            <p>
-                ${(file.size / 1024).toFixed(2)} KB
-            </p>
-
-            <p>Status: Uploading...</p>
-
-            <div class="progress-bar">
-                <div class="progress"></div>
-            </div>
-        `;
-
-        fileList.appendChild(fileItem);
-
-        const progress =
-            fileItem.querySelector(".progress");
-
-        const formData = new FormData();
-
-        formData.append("files", file);
-
-        try{
-
-            await axios.post(
-                "http://localhost:5000/api/upload",
-                formData,
-                {
-
-                    headers: {
-                        "Content-Type":
-                        "multipart/form-data"
-                    },
-
-                    onUploadProgress: (event) => {
-
-                        const percent = Math.round(
-                            (event.loaded * 100)
-                            / event.total
-                        );
-
-                        progress.style.width =
-                            percent + "%";
-                    }
-
-                }
-            );
-
-            progress.style.background = "green";
-
-            fileItem.querySelector(
-                "p:nth-child(3)"
-            ).innerText =
-            "Status: Complete";
-
-        }
-        catch(error){
-
-            fileItem.querySelector(
-                "p:nth-child(3)"
-            ).innerText =
-            "Status: Failed";
-
-        }
+        await uploadSingleFile(file);
 
     }
+
+    showToast(
+        `${files.length} file(s) uploaded successfully`
+    );
 
     loadDocuments();
 
 });
-
-
 // LOAD DOCUMENTS
 async function loadDocuments(){
 
@@ -188,6 +120,21 @@ async function deleteFile(id){
 
 }
 
+document
+  .getElementById("clearNotificationsBtn")
+  .addEventListener("click", async () => {
+
+    // 1. Clear UI immediately
+    document.getElementById("notificationList").innerHTML = "";
+
+    // 2. Optional: Clear from backend (recommended)
+    try {
+        await axios.delete("http://localhost:5000/api/notifications");
+        showToast("Notifications cleared successfully");
+    } catch (err) {
+        console.log("Error clearing notifications", err);
+    }
+});
 
 // LOAD NOTIFICATIONS
 async function loadNotifications(){
